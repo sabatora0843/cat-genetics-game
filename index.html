@@ -10,7 +10,7 @@
   <main class="app">
     <header>
       <h1>CAT COAT GENETICS QUIZ</h1>
-      <p>遺伝子配列から猫の毛色を推理するゲーム</p>
+      <p>遺伝子型から猫の毛色を当てるゲーム</p>
     </header>
 
     <section class="card">
@@ -21,12 +21,10 @@
 
       <div id="sexHint" class="sex-hint"></div>
 
-      <section class="sequence-panel">
-        <h2>DNA SEQUENCE</h2>
-        <p class="sequence-help">
-          各遺伝子座の配列を見て、表現される毛色を推理してください。
-        </p>
-        <div id="sequences" class="sequences"></div>
+      <section class="genotype-panel">
+        <h2>GENOTYPE</h2>
+        <div id="genotypeSummary" class="genotype-summary"></div>
+        <div id="genome" class="genome"></div>
       </section>
 
       <h2>この猫の毛色は？</h2>
@@ -36,9 +34,6 @@
         <div id="resultTitle" class="result-title"></div>
         <div id="correctAnswer" class="correct-answer"></div>
 
-        <h3>遺伝子型</h3>
-        <div id="genome" class="genome"></div>
-
         <h3>判定理由</h3>
         <ul id="explanation"></ul>
 
@@ -47,6 +42,13 @@
     </section>
 
     <section class="rules">
+      <h2>表記ルール</h2>
+      <ul>
+        <li>優性形質が表現される場合: <code>W-</code>, <code>A-</code>, <code>S-</code></li>
+        <li>劣性形質の場合: <code>ww</code>, <code>aa</code>, <code>ss</code></li>
+        <li><code>-</code> は、もう一方のアレルがどちらでも表現型が変わらないことを示します。</li>
+      </ul>
+
       <h2>主要遺伝子</h2>
       <div class="rule-grid">
         <div><strong>W</strong><span>優性白</span></div>
@@ -60,12 +62,8 @@
         <div><strong>T</strong><span>タビー模様</span></div>
         <div><strong>L</strong><span>長毛</span></div>
       </div>
-      <p class="note">
-        ※ DNA配列はゲーム用の架空配列です。実際の検査配列や変異位置を再現したものではありません。
-      </p>
-      <p class="note">
-        ※ 毛色遺伝も教材・ゲーム向けに簡略化しています。
-      </p>
+
+      <p class="note">※ 実際の猫の毛色遺伝を簡略化した教材・ゲーム用モデルです。</p>
     </section>
   </main>
 

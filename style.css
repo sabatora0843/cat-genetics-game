@@ -49,16 +49,16 @@ header p {
 }
 
 .badge,
-.score {
+.score,
+.sex-hint {
   font-weight: 700;
 }
 
 .sex-hint {
-  margin-bottom: 18px;
-  font-weight: 700;
+  margin-bottom: 16px;
 }
 
-.sequence-panel {
+.genotype-panel {
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 16px;
@@ -66,41 +66,52 @@ header p {
   background: #fafafa;
 }
 
-.sequence-panel h2 {
-  margin: 0 0 4px;
+.genotype-panel h2 {
+  margin-top: 0;
 }
 
-.sequence-help {
-  margin: 0 0 14px;
-  color: #666;
-  font-size: 0.92rem;
-}
-
-.sequences {
-  display: grid;
-  gap: 8px;
-}
-
-.sequence-row {
-  display: grid;
-  grid-template-columns: 38px 1fr;
-  gap: 10px;
-  align-items: start;
-}
-
-.sequence-symbol {
-  font-weight: 800;
-  font-size: 1.05rem;
-}
-
-.sequence-value {
+.genotype-summary {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  word-break: break-all;
-  letter-spacing: 0.05em;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 12px 14px;
+  margin-bottom: 14px;
   background: #fff;
-  border: 1px solid #e1e1e1;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+
+.genome {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.gene {
+  display: grid;
+  grid-template-columns: 42px 90px 1fr;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.gene-symbol {
+  font-weight: 800;
+}
+
+.gene-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 800;
+}
+
+.gene-label {
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .choices {
@@ -157,39 +168,6 @@ header p {
   margin-bottom: 18px;
 }
 
-.genome {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 22px;
-}
-
-.gene {
-  display: grid;
-  grid-template-columns: 42px 95px 1fr;
-  gap: 10px;
-  align-items: center;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 11px 12px;
-  background: #fafafa;
-}
-
-.gene-symbol {
-  font-size: 1.1rem;
-  font-weight: 800;
-}
-
-.gene-value {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-weight: 700;
-}
-
-.gene-label {
-  color: #666;
-  font-size: 0.9rem;
-}
-
 #nextButton {
   border: 0;
   border-radius: 10px;
@@ -210,6 +188,10 @@ header p {
   gap: 8px;
 }
 
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 .note {
   margin-top: 16px;
   color: #666;
@@ -228,15 +210,11 @@ header p {
   }
 
   .gene {
-    grid-template-columns: 36px 85px 1fr;
+    grid-template-columns: 36px 80px 1fr;
   }
 
   .card,
   .rules {
     padding: 16px;
-  }
-
-  .sequence-row {
-    grid-template-columns: 30px 1fr;
   }
 }

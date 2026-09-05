@@ -3,31 +3,10 @@ const state = {
   score: 0,
   answered: 0,
   currentGenome: null,
-  currentPhenotype: null,
-  currentSequences: null
+  currentPhenotype: null
 };
 
 const LOCUS_ORDER = ["W", "O", "A", "B", "C", "D", "I", "S", "T", "L"];
-
-/*
- * ゲーム用の架空DNA配列。
- * 実在するSNPや検査配列を示すものではない。
- *
- * 各アレルに固定配列を割り当てることで、
- * プレイヤーが繰り返し遊ぶと「配列 → アレル」を学習できる。
- */
-const ALLELE_SEQUENCE = {
-  W:  { W: "GCTAACGTTAGC", w: "GCTAACATTAGC" },
-  O:  { O: "TACCGGATCAAG", o: "TACCGGGTCAAG", Y: "TTTTGGATCAAG" },
-  A:  { A: "AACGTCTGGAAC", a: "AACGTATGGAAC" },
-  B:  { B: "CGTATCGGACTA", b: "CGTATCAGACTA" },
-  C:  { C: "GGAACCTTAGCG", cs: "GGAATCTTAGCG", cb: "GGAAGCTTAGCG" },
-  D:  { D: "ATGCCGTAACCT", d: "ATGCCATAACCT" },
-  I:  { I: "CCGTAAGGCTTA", i: "CCGTACGGCTTA" },
-  S:  { S: "TTAACCGGATGC", s: "TTAACAGGATGC" },
-  T:  { Mc: "AGGCTTACCGTA", mc: "AGGCTAATCGTA" },
-  L:  { L: "CTTAGGCCAATG", l: "CTTAGACCAATG" }
-};
 
 function randomChoice(items) {
   return items[Math.floor(Math.random() * items.length)];
@@ -50,34 +29,46 @@ function randomGenome() {
 
   return {
     sex,
-    white: weightedChoice([
+
+    // 内部では実際の2アレルを保持。
+    // 表示時は phenotype-equivalent shorthand（W-, ww 等）に変換する。
+    W: weightedChoice([
       { value: ["w", "w"], weight: 9 },
       { value: ["W", "w"], weight: 1 }
     ]),
-    orange: sex === "female"
+
+    O: sex === "female"
       ? randomChoice([["O", "O"], ["O", "o"], ["o", "o"]])
       : randomChoice([["O", "Y"], ["o", "Y"]]),
-    agouti: randomChoice([["A", "A"], ["A", "a"], ["a", "a"]]),
-    brown: randomChoice([["B", "B"], ["B", "b"], ["b", "b"]]),
-    colorpoint: weightedChoice([
+
+    A: randomChoice([["A", "A"], ["A", "a"], ["a", "a"]]),
+
+    B: randomChoice([["B", "B"], ["B", "b"], ["b", "b"]]),
+
+    C: weightedChoice([
       { value: ["C", "C"], weight: 6 },
       { value: ["C", "cs"], weight: 2 },
       { value: ["cs", "cs"], weight: 1.5 },
       { value: ["cb", "cs"], weight: 0.5 }
     ]),
-    dilute: randomChoice([["D", "D"], ["D", "d"], ["d", "d"]]),
-    inhibitor: weightedChoice([
+
+    D: randomChoice([["D", "D"], ["D", "d"], ["d", "d"]]),
+
+    I: weightedChoice([
       { value: ["i", "i"], weight: 7 },
       { value: ["I", "i"], weight: 2.5 },
       { value: ["I", "I"], weight: 0.5 }
     ]),
-    spotting: weightedChoice([
+
+    S: weightedChoice([
       { value: ["s", "s"], weight: 6 },
       { value: ["S", "s"], weight: 3 },
       { value: ["S", "S"], weight: 1 }
     ]),
-    tabby: randomChoice([["Mc", "Mc"], ["Mc", "mc"], ["mc", "mc"]]),
-    longhair: weightedChoice([
+
+    T: randomChoice([["Mc", "Mc"], ["Mc", "mc"], ["mc", "mc"]]),
+
+    L: weightedChoice([
       { value: ["L", "L"], weight: 4 },
       { value: ["L", "l"], weight: 4 },
       { value: ["l", "l"], weight: 2 }
@@ -85,90 +76,111 @@ function randomGenome() {
   };
 }
 
-function genotypeString(pair) {
-  return pair.join("/");
-}
-
-function genomeByLocus(g) {
-  return {
-    W: g.white,
-    O: g.orange,
-    A: g.agouti,
-    B: g.brown,
-    C: g.colorpoint,
-    D: g.dilute,
-    I: g.inhibitor,
-    S: g.spotting,
-    T: g.tabby,
-    L: g.longhair
-  };
-}
-
-function generateSequences(g) {
-  const loci = genomeByLocus(g);
-  const result = {};
-
-  for (const locus of LOCUS_ORDER) {
-    const [a1, a2] = loci[locus];
-    const seq1 = ALLELE_SEQUENCE[locus][a1];
-    const seq2 = ALLELE_SEQUENCE[locus][a2];
-    result[locus] = `${seq1} / ${seq2}`;
-  }
-
-  return result;
-}
-
-function hasAllele(pair, allele) {
+function has(pair, allele) {
   return pair.includes(allele);
 }
 
-function isHomozygous(pair, allele) {
+function homo(pair, allele) {
   return pair[0] === allele && pair[1] === allele;
 }
 
+function dominantShorthand(pair, dominant, recessive) {
+  return has(pair, dominant) ? `${dominant}-` : `${recessive}${recessive}`;
+}
+
+function shorthandForLocus(locus, g) {
+  const pair = g[locus];
+
+  switch (locus) {
+    case "W":
+      return dominantShorthand(pair, "W", "w");
+
+    case "O":
+      // OはX染色体上だが、ゲーム表示では性別を別途示す。
+      if (g.sex === "male") {
+        return has(pair, "O") ? "O-" : "oo";
+      }
+      if (homo(pair, "O")) return "OO";
+      if (homo(pair, "o")) return "oo";
+      return "Oo";
+
+    case "A":
+      return dominantShorthand(pair, "A", "a");
+
+    case "B":
+      return dominantShorthand(pair, "B", "b");
+
+    case "C": {
+      // C は多対立遺伝子のため、意味を失わない範囲で表記。
+      if (has(pair, "C")) return "C-";
+      if (homo(pair, "cs")) return "cscs";
+      return "cbcs";
+    }
+
+    case "D":
+      return dominantShorthand(pair, "D", "d");
+
+    case "I":
+      return dominantShorthand(pair, "I", "i");
+
+    case "S":
+      return dominantShorthand(pair, "S", "s");
+
+    case "T":
+      return has(pair, "Mc") ? "Mc-" : "mcmc";
+
+    case "L":
+      return dominantShorthand(pair, "L", "l");
+
+    default:
+      return pair.join("");
+  }
+}
+
+function genotypeSummary(g) {
+  return LOCUS_ORDER.map(locus => shorthandForLocus(locus, g)).join(" ");
+}
+
 function hasDominantWhite(g) {
-  return hasAllele(g.white, "W");
+  return has(g.W, "W");
 }
 
 function isDilute(g) {
-  return isHomozygous(g.dilute, "d");
+  return homo(g.D, "d");
 }
 
 function hasInhibitor(g) {
-  return hasAllele(g.inhibitor, "I");
+  return has(g.I, "I");
 }
 
 function hasSpotting(g) {
-  return hasAllele(g.spotting, "S");
+  return has(g.S, "S");
 }
 
 function isLonghair(g) {
-  return isHomozygous(g.longhair, "l");
+  return homo(g.L, "l");
 }
 
 function isAgouti(g) {
-  return hasAllele(g.agouti, "A");
+  return has(g.A, "A");
 }
 
 function isChocolate(g) {
-  return isHomozygous(g.brown, "b");
+  return homo(g.B, "b");
 }
 
 function isTortoiseshell(g) {
-  return g.sex === "female"
-    && g.orange.includes("O")
-    && g.orange.includes("o");
+  return g.sex === "female" && has(g.O, "O") && has(g.O, "o");
 }
 
 function isOrange(g) {
-  return hasAllele(g.orange, "O");
+  return has(g.O, "O");
 }
 
 function colorpointType(g) {
-  const value = genotypeString(g.colorpoint);
-  if (value === "cs/cs") return "ポイント";
-  if (value === "cb/cs" || value === "cs/cb") return "ミンク";
-  return null;
+  if (has(g.C, "C")) return null;
+  if (homo(g.C, "cs")) return "ポイント";
+  return "ミンク";
 }
 
 function eumelaninColor(g) {
@@ -186,7 +198,7 @@ function orangeColor(g) {
 }
 
 function tabbyPattern(g) {
-  return isHomozygous(g.tabby, "mc")
+  return homo(g.T, "mc")
     ? "クラシックタビー"
     : "マッカレルタビー";
 }
@@ -199,11 +211,11 @@ function applyPoint(base, g, explanation) {
   const type = colorpointType(g);
   if (!type) return base;
 
-  explanation.push(
-    type === "ポイント"
-      ? "C座が cs/cs のためポイントカラーとして扱います。"
-      : "C座が cb/cs のためミンク系の色制限として扱います。"
-  );
+  if (type === "ポイント") {
+    explanation.push("C座が cscs のためポイントカラーとして扱います。");
+  } else {
+    explanation.push("C座が cbcs のためミンク系として扱います。");
+  }
 
   return `${base}・${type}`;
 }
@@ -212,11 +224,11 @@ function applySilver(base, g, explanation, agoutiVisible) {
   if (!hasInhibitor(g)) return base;
 
   if (agoutiVisible) {
-    explanation.push("I があるため、タビー系ではシルバーとして扱います。");
+    explanation.push("I- のためタビー系ではシルバーとして扱います。");
     return `${base}・シルバー`;
   }
 
-  explanation.push("I があるため、ソリッド系ではスモークとして扱います。");
+  explanation.push("I- のためソリッド系ではスモークとして扱います。");
   return `${base}・スモーク`;
 }
 
@@ -224,8 +236,11 @@ function predict(g) {
   const explanation = [];
 
   if (hasDominantWhite(g)) {
-    explanation.push("W があるため優性白となり、他の毛色遺伝子の表現を覆います。");
-    if (isLonghair(g)) explanation.push("l/l のため長毛です。");
+    explanation.push("W- のため優性白となり、他の毛色遺伝子の表現を覆います。");
+
+    if (isLonghair(g)) {
+      explanation.push("ll のため長毛です。");
+    }
 
     return {
       name: `ホワイト${hairSuffix(g)}`,
@@ -235,8 +250,8 @@ function predict(g) {
 
   explanation.push(
     isDilute(g)
-      ? "d/d のため色が希釈されます。"
-      : "D が少なくとも1つあるため非希釈色です。"
+      ? "dd のため色が希釈されます。"
+      : "D- のため非希釈色です。"
   );
 
   let base = "";
@@ -246,28 +261,30 @@ function predict(g) {
     const dark = eumelaninColor(g);
     const red = orangeColor(g);
 
-    explanation.push("メスの O/o により、黒系と赤系がモザイク状に現れます。");
+    explanation.push("メスで Oo のため、黒系と赤系がモザイク状に現れます。");
 
     if (isAgouti(g)) {
       base = `${dark}タビー＆${red}（トービー）`;
       agoutiVisible = true;
-      explanation.push("A_ のため黒系部分にタビー模様が現れます。");
+      explanation.push("A- のため黒系部分にタビー模様が現れます。");
     } else {
       base = `${dark}＆${red}（トーティ）`;
-      explanation.push("a/a のため黒系部分は基本的にソリッドです。");
+      explanation.push("aa のため黒系部分は基本的にソリッドです。");
     }
 
     base = applySilver(base, g, explanation, agoutiVisible);
     base = applyPoint(base, g, explanation);
 
     if (hasSpotting(g)) {
-      explanation.push("S があるため白斑が加わります。");
+      explanation.push("S- のため白斑が加わります。");
 
       const commonName = isDilute(g)
         ? "ダイリュート・キャリコ"
         : "三毛（キャリコ）";
 
-      if (isLonghair(g)) explanation.push("l/l のため長毛です。");
+      if (isLonghair(g)) {
+        explanation.push("ll のため長毛です。");
+      }
 
       return {
         name: `${commonName} [${base}＆ホワイト]${hairSuffix(g)}`,
@@ -275,7 +292,9 @@ function predict(g) {
       };
     }
 
-    if (isLonghair(g)) explanation.push("l/l のため長毛です。");
+    if (isLonghair(g)) {
+      explanation.push("ll のため長毛です。");
+    }
 
     return {
       name: `${base}${hairSuffix(g)}`,
@@ -284,8 +303,7 @@ function predict(g) {
   }
 
   if (isOrange(g)) {
-    const color = orangeColor(g);
-    base = `${color}・${tabbyPattern(g)}`;
+    base = `${orangeColor(g)}・${tabbyPattern(g)}`;
     agoutiVisible = true;
 
     explanation.push("O が表現されるため赤系色になります。");
@@ -297,13 +315,13 @@ function predict(g) {
       base = `${color}・${tabbyPattern(g)}`;
       agoutiVisible = true;
 
-      explanation.push("o のため黒色系色素が基調になります。");
-      explanation.push("A_ のためタビー模様が現れます。");
+      explanation.push("oo のため黒色系色素が基調になります。");
+      explanation.push("A- のためタビー模様が現れます。");
     } else {
       base = color;
 
-      explanation.push("o のため黒色系色素が基調になります。");
-      explanation.push("a/a のため非アグーチ（ソリッド）です。");
+      explanation.push("oo のため黒色系色素が基調になります。");
+      explanation.push("aa のため非アグーチ（ソリッド）です。");
     }
   }
 
@@ -312,11 +330,11 @@ function predict(g) {
 
   if (hasSpotting(g)) {
     base += "＆ホワイト";
-    explanation.push("S があるため白斑が加わります。");
+    explanation.push("S- のため白斑が加わります。");
   }
 
   if (isLonghair(g)) {
-    explanation.push("l/l のため長毛です。");
+    explanation.push("ll のため長毛です。");
   }
 
   return {
@@ -345,39 +363,32 @@ function makeChoices(correct, count = 4) {
 
   const choices = [correct, ...wrong.slice(0, count - 1)];
   shuffle(choices);
+
   return choices;
 }
 
-function renderSequences(sequences) {
-  document.getElementById("sequences").innerHTML =
-    LOCUS_ORDER.map(locus => `
-      <div class="sequence-row">
-        <span class="sequence-symbol">${locus}</span>
-        <span class="sequence-value">${sequences[locus]}</span>
-      </div>
-    `).join("");
-}
-
 function renderGenome(g) {
-  const rows = [
-    ["W", genotypeString(g.white), "優性白"],
-    ["O", genotypeString(g.orange), "オレンジ"],
-    ["A", genotypeString(g.agouti), "アグーチ"],
-    ["B", genotypeString(g.brown), "黒 / チョコレート"],
-    ["C", genotypeString(g.colorpoint), "カラーポイント"],
-    ["D", genotypeString(g.dilute), "希釈"],
-    ["I", genotypeString(g.inhibitor), "シルバー / スモーク"],
-    ["S", genotypeString(g.spotting), "白斑"],
-    ["T", genotypeString(g.tabby), "タビー模様"],
-    ["L", genotypeString(g.longhair), "長毛"]
-  ];
+  const labels = {
+    W: "優性白",
+    O: "オレンジ",
+    A: "アグーチ",
+    B: "黒 / チョコレート",
+    C: "カラーポイント",
+    D: "希釈",
+    I: "シルバー / スモーク",
+    S: "白斑",
+    T: "タビー模様",
+    L: "長毛"
+  };
+
+  document.getElementById("genotypeSummary").textContent = genotypeSummary(g);
 
   document.getElementById("genome").innerHTML =
-    rows.map(([symbol, value, label]) => `
+    LOCUS_ORDER.map(locus => `
       <div class="gene">
-        <span class="gene-symbol">${symbol}</span>
-        <span class="gene-value">${value}</span>
-        <span class="gene-label">${label}</span>
+        <span class="gene-symbol">${locus}</span>
+        <span class="gene-value">${shorthandForLocus(locus, g)}</span>
+        <span class="gene-label">${labels[locus]}</span>
       </div>
     `).join("");
 }
@@ -386,7 +397,6 @@ function renderQuestion() {
   state.question += 1;
   state.currentGenome = randomGenome();
   state.currentPhenotype = predict(state.currentGenome);
-  state.currentSequences = generateSequences(state.currentGenome);
 
   document.getElementById("questionNumber").textContent =
     `第 ${state.question} 問`;
@@ -395,19 +405,18 @@ function renderQuestion() {
     `性別: ${state.currentGenome.sex === "female" ? "♀ メス" : "♂ オス"}`;
 
   updateScore();
-  renderSequences(state.currentSequences);
+  renderGenome(state.currentGenome);
 
   const choices = makeChoices(state.currentPhenotype.name);
-  const choicesEl = document.getElementById("choices");
 
-  choicesEl.innerHTML = choices.map(choice => `
-    <button class="choice" type="button" data-choice="${encodeURIComponent(choice)}">
-      ${choice}
-    </button>
-  `).join("");
+  document.getElementById("choices").innerHTML =
+    choices.map(choice => `
+      <button class="choice" type="button" data-choice="${encodeURIComponent(choice)}">
+        ${choice}
+      </button>
+    `).join("");
 
   document.getElementById("result").classList.add("hidden");
-  document.getElementById("genome").innerHTML = "";
   document.getElementById("explanation").innerHTML = "";
 
   document.querySelectorAll(".choice").forEach(button => {
@@ -423,11 +432,15 @@ function answerQuestion(selected) {
   state.answered += 1;
   const ok = selected === correct;
 
-  if (ok) state.score += 1;
+  if (ok) {
+    state.score += 1;
+  }
+
   updateScore();
 
   document.querySelectorAll(".choice").forEach(button => {
     button.disabled = true;
+
     const value = decodeURIComponent(button.dataset.choice);
 
     if (value === correct) {
@@ -443,8 +456,6 @@ function answerQuestion(selected) {
 
   document.getElementById("correctAnswer").textContent =
     ok ? `毛色: ${correct}` : `正解: ${correct}`;
-
-  renderGenome(state.currentGenome);
 
   document.getElementById("explanation").innerHTML =
     state.currentPhenotype.explanation
