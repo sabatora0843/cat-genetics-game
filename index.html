@@ -19,7 +19,7 @@
         <div id="score" class="score">SCORE 0 / 0</div>
       </div>
 
-      <div id="genome" class="genome"></div>
+      <div id="catHint" class="cat-hint"></div>
 
       <h2>この猫の毛色は？</h2>
       <div id="choices" class="choices"></div>
@@ -27,25 +27,32 @@
       <section id="result" class="result hidden">
         <div id="resultTitle" class="result-title"></div>
         <div id="correctAnswer" class="correct-answer"></div>
+
+        <h3>遺伝子型</h3>
+        <div id="genome" class="genome"></div>
+
         <h3>判定理由</h3>
         <ul id="explanation"></ul>
+
         <button id="nextButton" type="button">次の問題</button>
       </section>
     </section>
 
     <section class="rules">
-      <h2>主要ルール</h2>
-      <ul>
-        <li><strong>W_</strong>：優性白</li>
-        <li><strong>S_</strong>：白斑</li>
-        <li><strong>dd</strong>：希釈（ブラック→ブルー、レッド→クリーム）</li>
-        <li><strong>bb</strong>：チョコレート系</li>
-        <li><strong>A_</strong>：アグーチ / タビー</li>
-        <li><strong>aa</strong>：ソリッド</li>
-        <li><strong>O</strong>：オレンジ系</li>
-        <li><strong>♀ Oo</strong>：トーティ / キャリコ系</li>
-      </ul>
-      <p class="note">※ 実際の猫の毛色遺伝を簡略化したゲーム用モデルです。</p>
+      <h2>主要遺伝子</h2>
+      <div class="rule-grid">
+        <div><strong>W</strong><span>優性白</span></div>
+        <div><strong>O</strong><span>オレンジ</span></div>
+        <div><strong>A</strong><span>アグーチ</span></div>
+        <div><strong>B</strong><span>黒 / チョコレート</span></div>
+        <div><strong>C</strong><span>カラーポイント</span></div>
+        <div><strong>D</strong><span>希釈</span></div>
+        <div><strong>I</strong><span>シルバー / スモーク</span></div>
+        <div><strong>S</strong><span>白斑</span></div>
+        <div><strong>T</strong><span>タビー模様</span></div>
+        <div><strong>L</strong><span>長毛</span></div>
+      </div>
+      <p class="note">※ 実際の猫の毛色遺伝を簡略化した教材・ゲーム用モデルです。</p>
     </section>
   </main>
 

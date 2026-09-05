@@ -13,7 +13,7 @@ body {
 }
 
 .app {
-  width: min(760px, calc(100% - 32px));
+  width: min(820px, calc(100% - 32px));
   margin: 32px auto;
 }
 
@@ -53,6 +53,15 @@ header p {
   font-weight: 700;
 }
 
+.cat-hint {
+  margin-bottom: 22px;
+  padding: 14px;
+  border: 1px dashed #bbb;
+  border-radius: 10px;
+  background: #fafafa;
+  color: #555;
+}
+
 .genome {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -61,23 +70,29 @@ header p {
 }
 
 .gene {
+  display: grid;
+  grid-template-columns: 42px 95px 1fr;
+  gap: 10px;
+  align-items: center;
   border: 1px solid #ddd;
   border-radius: 10px;
-  padding: 12px;
+  padding: 11px 12px;
   background: #fafafa;
 }
 
-.gene .label {
-  display: block;
-  font-size: 0.82rem;
-  color: #666;
+.gene-symbol {
+  font-size: 1.1rem;
+  font-weight: 800;
 }
 
-.gene .value {
-  display: block;
-  margin-top: 3px;
-  font-size: 1.15rem;
+.gene-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 700;
+}
+
+.gene-label {
+  color: #666;
+  font-size: 0.9rem;
 }
 
 h2 {
@@ -135,7 +150,7 @@ h2 {
 }
 
 .correct-answer {
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 #nextButton {
@@ -146,23 +161,37 @@ h2 {
   cursor: pointer;
 }
 
-.rules ul {
-  padding-left: 1.4rem;
+.rule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+}
+
+.rule-grid div {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 8px;
 }
 
 .note {
+  margin-top: 18px;
   color: #666;
   font-size: 0.9rem;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 600px) {
   .app {
-    width: min(100% - 20px, 760px);
+    width: min(100% - 20px, 820px);
     margin: 16px auto;
   }
 
-  .genome {
+  .genome,
+  .rule-grid {
     grid-template-columns: 1fr;
+  }
+
+  .gene {
+    grid-template-columns: 36px 85px 1fr;
   }
 
   .card,

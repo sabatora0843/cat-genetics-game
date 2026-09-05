@@ -18,7 +18,6 @@ function weightedChoice(items) {
     r -= item.weight;
     if (r <= 0) return item.value;
   }
-
   return items[items.length - 1].value;
 }
 
@@ -27,40 +26,85 @@ function randomGenome() {
 
   return {
     sex,
-    orange: sex === "female"
-      ? randomChoice(["OO", "Oo", "oo"])
-      : randomChoice(["OY", "oY"]),
-    brown: randomChoice(["BB", "Bb", "bb"]),
-    dilute: randomChoice(["DD", "Dd", "dd"]),
-    agouti: randomChoice(["AA", "Aa", "aa"]),
     white: weightedChoice([
-      { value: "NN", weight: 8 },
-      { value: "NW", weight: 1.5 },
-      { value: "WW", weight: 0.5 }
+      { value: "w/w", weight: 9 },
+      { value: "W/w", weight: 1 }
+    ]),
+    orange: sex === "female"
+      ? randomChoice(["O/O", "O/o", "o/o"])
+      : randomChoice(["O/Y", "o/Y"]),
+    agouti: randomChoice(["A/A", "A/a", "a/a"]),
+    brown: randomChoice(["B/B", "B/b", "b/b"]),
+    colorpoint: weightedChoice([
+      { value: "C/C", weight: 6 },
+      { value: "C/cs", weight: 2 },
+      { value: "cs/cs", weight: 1.5 },
+      { value: "cb/cs", weight: 0.5 }
+    ]),
+    dilute: randomChoice(["D/D", "D/d", "d/d"]),
+    inhibitor: weightedChoice([
+      { value: "i/i", weight: 7 },
+      { value: "I/i", weight: 2.5 },
+      { value: "I/I", weight: 0.5 }
     ]),
     spotting: weightedChoice([
-      { value: "ss", weight: 5 },
-      { value: "Ss", weight: 3 },
-      { value: "SS", weight: 1 }
+      { value: "s/s", weight: 6 },
+      { value: "S/s", weight: 3 },
+      { value: "S/S", weight: 1 }
     ]),
-    tabby: randomChoice(["McMc", "Mcmc", "mcmc"])
+    tabby: randomChoice(["Mc/Mc", "Mc/mc", "mc/mc"]),
+    longhair: weightedChoice([
+      { value: "L/L", weight: 4 },
+      { value: "L/l", weight: 4 },
+      { value: "l/l", weight: 2 }
+    ])
   };
 }
 
-function isDilute(g) {
-  return g.dilute === "dd";
+function hasDominantWhite(g) {
+  return g.white.startsWith("W");
 }
 
-function hasOrange(g) {
-  return ["OO", "Oo", "OY"].includes(g.orange);
+function isDilute(g) {
+  return g.dilute === "d/d";
+}
+
+function hasInhibitor(g) {
+  return g.inhibitor !== "i/i";
+}
+
+function hasSpotting(g) {
+  return g.spotting !== "s/s";
+}
+
+function isLonghair(g) {
+  return g.longhair === "l/l";
+}
+
+function isAgouti(g) {
+  return g.agouti !== "a/a";
+}
+
+function isChocolate(g) {
+  return g.brown === "b/b";
 }
 
 function isTortoiseshell(g) {
-  return g.sex === "female" && g.orange === "Oo";
+  return g.sex === "female" && g.orange === "O/o";
+}
+
+function isOrange(g) {
+  return ["O/O", "O/o", "O/Y"].includes(g.orange);
+}
+
+function colorpointType(g) {
+  if (g.colorpoint === "cs/cs") return "ポイント";
+  if (g.colorpoint === "cb/cs") return "ミンク";
+  return null;
 }
 
 function eumelaninColor(g) {
-  let color = g.brown === "bb" ? "チョコレート" : "ブラック";
+  let color = isChocolate(g) ? "チョコレート" : "ブラック";
 
   if (isDilute(g)) {
     color = color === "チョコレート" ? "ライラック" : "ブルー";
@@ -74,93 +118,143 @@ function orangeColor(g) {
 }
 
 function tabbyPattern(g) {
-  return g.tabby === "mcmc" ? "クラシックタビー" : "マッカレルタビー";
+  return g.tabby === "mc/mc" ? "クラシックタビー" : "マッカレルタビー";
+}
+
+function hairSuffix(g) {
+  return isLonghair(g) ? "・ロングヘア" : "";
+}
+
+function applyPoint(base, g, explanation) {
+  const type = colorpointType(g);
+  if (!type) return base;
+
+  explanation.push(
+    g.colorpoint === "cs/cs"
+      ? "C座が cs/cs のため、温度依存性のポイントカラーとして扱います。"
+      : "C座が cb/cs のため、ミンク系の色制限として扱います。"
+  );
+
+  return `${base}・${type}`;
+}
+
+function applySilver(base, g, explanation, agoutiVisible) {
+  if (!hasInhibitor(g)) return base;
+
+  if (agoutiVisible) {
+    explanation.push("I があるため、タビーの地色をシルバーとして扱います。");
+    return `${base}・シルバー`;
+  }
+
+  explanation.push("I があるため、ソリッド系ではスモークとして扱います。");
+  return `${base}・スモーク`;
 }
 
 function predict(g) {
   const explanation = [];
 
-  if (g.white.includes("W")) {
-    explanation.push("W（優性白）があるため、他の毛色遺伝子の表現を覆います。");
-    return { name: "ホワイト", explanation };
+  if (hasDominantWhite(g)) {
+    explanation.push("W があるため優性白となり、他の毛色遺伝子の表現を覆います。");
+    if (isLonghair(g)) {
+      explanation.push("l/l のため長毛です。");
+    }
+    return {
+      name: `ホワイト${hairSuffix(g)}`,
+      explanation
+    };
   }
 
-  if (isDilute(g)) {
-    explanation.push("d/d のため色が希釈されます。");
-  } else {
-    explanation.push("D が少なくとも1つあるため非希釈色です。");
-  }
+  explanation.push(
+    isDilute(g)
+      ? "d/d のため色が希釈されます。"
+      : "D が少なくとも1つあるため非希釈色です。"
+  );
+
+  let base = "";
+  let agoutiVisible = false;
 
   if (isTortoiseshell(g)) {
     const dark = eumelaninColor(g);
     const red = orangeColor(g);
-    let base;
 
-    if (g.agouti !== "aa") {
+    explanation.push("雌の O/o により、黒系と赤系がモザイク状に現れます。");
+
+    if (isAgouti(g)) {
       base = `${dark}タビー＆${red}（トービー）`;
-      explanation.push("雌の O/o により、黒系と赤系がモザイク状に現れます。");
+      agoutiVisible = true;
       explanation.push("A_ のため黒系部分にタビー模様が現れます。");
     } else {
       base = `${dark}＆${red}（トーティ）`;
-      explanation.push("雌の O/o により、黒系と赤系がモザイク状に現れます。");
       explanation.push("a/a のため黒系部分は基本的にソリッドです。");
     }
 
-    if (g.spotting !== "ss") {
-      base += "＆ホワイト";
+    base = applySilver(base, g, explanation, agoutiVisible);
+    base = applyPoint(base, g, explanation);
+
+    if (hasSpotting(g)) {
       explanation.push("S があるため白斑が加わります。");
-
-      if (!isDilute(g)) {
-        return {
-          name: `三毛（キャリコ） [${base}]`,
-          explanation
-        };
-      }
-
+      const commonName = isDilute(g)
+        ? "ダイリュート・キャリコ"
+        : "三毛（キャリコ）";
       return {
-        name: `ダイリュート・キャリコ [${base}]`,
-        explanation
+        name: `${commonName} [${base}＆ホワイト]${hairSuffix(g)}`,
+        explanation: [
+          ...explanation,
+          ...(isLonghair(g) ? ["l/l のため長毛です。"] : [])
+        ]
       };
     }
 
-    return { name: base, explanation };
+    if (isLonghair(g)) explanation.push("l/l のため長毛です。");
+    return {
+      name: `${base}${hairSuffix(g)}`,
+      explanation
+    };
   }
 
-  let base;
-
-  if (hasOrange(g)) {
+  if (isOrange(g)) {
     const color = orangeColor(g);
-    const pattern = tabbyPattern(g);
-    base = `${color}・${pattern}`;
+    base = `${color}・${tabbyPattern(g)}`;
+    agoutiVisible = true;
     explanation.push("O が表現されるため赤系色になります。");
     explanation.push("赤系ではタビー模様が表現されるものとして扱います。");
   } else {
     const color = eumelaninColor(g);
 
-    if (g.agouti === "aa") {
+    if (isAgouti(g)) {
+      base = `${color}・${tabbyPattern(g)}`;
+      agoutiVisible = true;
+      explanation.push("o のため黒色系色素が基調になります。");
+      explanation.push("A_ のためタビー模様が現れます。");
+    } else {
       base = color;
       explanation.push("o のため黒色系色素が基調になります。");
       explanation.push("a/a のため非アグーチ（ソリッド）です。");
-    } else {
-      const pattern = tabbyPattern(g);
-      base = `${color}・${pattern}`;
-      explanation.push("o のため黒色系色素が基調になります。");
-      explanation.push("A_ のためタビー模様が現れます。");
     }
   }
 
-  if (g.spotting !== "ss") {
+  base = applySilver(base, g, explanation, agoutiVisible);
+  base = applyPoint(base, g, explanation);
+
+  if (hasSpotting(g)) {
     base += "＆ホワイト";
     explanation.push("S があるため白斑が加わります。");
   }
 
-  return { name: base, explanation };
+  if (isLonghair(g)) {
+    explanation.push("l/l のため長毛です。");
+  }
+
+  return {
+    name: `${base}${hairSuffix(g)}`,
+    explanation
+  };
 }
 
 function makeChoices(correct, count = 4) {
   const pool = new Set([correct]);
 
-  for (let i = 0; i < 400 && pool.size < 16; i++) {
+  for (let i = 0; i < 1200 && pool.size < 30; i++) {
     pool.add(predict(randomGenome()).name);
   }
 
@@ -182,23 +276,27 @@ function shuffle(array) {
 
 function renderGenome(g) {
   const rows = [
-    ["性別", g.sex === "female" ? "♀ メス" : "♂ オス"],
-    ["O座", `${g.orange} — オレンジ`],
-    ["B座", `${g.brown} — 黒 / チョコレート`],
-    ["D座", `${g.dilute} — 希釈`],
-    ["A座", `${g.agouti} — アグーチ`],
-    ["W座", `${g.white} — 優性白`],
-    ["S座", `${g.spotting} — 白斑`],
-    ["Mc座", `${g.tabby} — タビー模様`]
+    ["W", g.white, "優性白"],
+    ["O", g.orange, "オレンジ"],
+    ["A", g.agouti, "アグーチ"],
+    ["B", g.brown, "黒 / チョコレート"],
+    ["C", g.colorpoint, "カラーポイント"],
+    ["D", g.dilute, "希釈"],
+    ["I", g.inhibitor, "シルバー / スモーク"],
+    ["S", g.spotting, "白斑"],
+    ["T", g.tabby, "タビー模様"],
+    ["L", g.longhair, "長毛"]
   ];
 
-  const genome = document.getElementById("genome");
-  genome.innerHTML = rows.map(([label, value]) => `
-    <div class="gene">
-      <span class="label">${label}</span>
-      <span class="value">${value}</span>
-    </div>
-  `).join("");
+  document.getElementById("genome").innerHTML = rows.map(
+    ([symbol, value, label]) => `
+      <div class="gene">
+        <span class="gene-symbol">${symbol}</span>
+        <span class="gene-value">${value}</span>
+        <span class="gene-label">${label}</span>
+      </div>
+    `
+  ).join("");
 }
 
 function renderQuestion() {
@@ -207,9 +305,9 @@ function renderQuestion() {
   state.currentPhenotype = predict(state.currentGenome);
 
   document.getElementById("questionNumber").textContent = `第 ${state.question} 問`;
+  document.getElementById("catHint").textContent =
+    `性別: ${state.currentGenome.sex === "female" ? "♀ メス" : "♂ オス"}　／　遺伝子型は回答後に開示`;
   updateScore();
-
-  renderGenome(state.currentGenome);
 
   const choices = makeChoices(state.currentPhenotype.name);
   const choicesEl = document.getElementById("choices");
@@ -221,6 +319,8 @@ function renderQuestion() {
   `).join("");
 
   document.getElementById("result").classList.add("hidden");
+  document.getElementById("genome").innerHTML = "";
+  document.getElementById("explanation").innerHTML = "";
 
   document.querySelectorAll(".choice").forEach(button => {
     button.addEventListener("click", () => {
@@ -236,10 +336,7 @@ function answerQuestion(selected) {
   state.answered += 1;
   const ok = selected === correct;
 
-  if (ok) {
-    state.score += 1;
-  }
-
+  if (ok) state.score += 1;
   updateScore();
 
   document.querySelectorAll(".choice").forEach(button => {
@@ -253,13 +350,13 @@ function answerQuestion(selected) {
     }
   });
 
-  const result = document.getElementById("result");
-  result.classList.remove("hidden");
-
+  document.getElementById("result").classList.remove("hidden");
   document.getElementById("resultTitle").textContent = ok ? "○ 正解" : "× 不正解";
   document.getElementById("correctAnswer").textContent = ok
     ? `毛色: ${correct}`
     : `正解: ${correct}`;
+
+  renderGenome(state.currentGenome);
 
   document.getElementById("explanation").innerHTML =
     state.currentPhenotype.explanation
