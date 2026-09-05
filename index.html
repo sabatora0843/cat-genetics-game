@@ -10,7 +10,7 @@
   <main class="app">
     <header>
       <h1>CAT COAT GENETICS QUIZ</h1>
-      <p>遺伝子型から猫の毛色を当てるゲーム</p>
+      <p>遺伝子配列から猫の毛色を推理するゲーム</p>
     </header>
 
     <section class="card">
@@ -19,7 +19,15 @@
         <div id="score" class="score">SCORE 0 / 0</div>
       </div>
 
-      <div id="catHint" class="cat-hint"></div>
+      <div id="sexHint" class="sex-hint"></div>
+
+      <section class="sequence-panel">
+        <h2>DNA SEQUENCE</h2>
+        <p class="sequence-help">
+          各遺伝子座の配列を見て、表現される毛色を推理してください。
+        </p>
+        <div id="sequences" class="sequences"></div>
+      </section>
 
       <h2>この猫の毛色は？</h2>
       <div id="choices" class="choices"></div>
@@ -52,7 +60,12 @@
         <div><strong>T</strong><span>タビー模様</span></div>
         <div><strong>L</strong><span>長毛</span></div>
       </div>
-      <p class="note">※ 実際の猫の毛色遺伝を簡略化した教材・ゲーム用モデルです。</p>
+      <p class="note">
+        ※ DNA配列はゲーム用の架空配列です。実際の検査配列や変異位置を再現したものではありません。
+      </p>
+      <p class="note">
+        ※ 毛色遺伝も教材・ゲーム向けに簡略化しています。
+      </p>
     </section>
   </main>
 
