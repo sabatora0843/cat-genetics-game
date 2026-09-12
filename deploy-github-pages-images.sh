@@ -58,7 +58,9 @@ if [[ ! -f "$IMAGE_PATH" ]]; then
   exit 1
 fi
 
-cat > index.html <<'EOF'
+mkdir -p images
+
+cat > images/index.html <<'EOF'
 <!doctype html>
 <html lang="ja">
 <head>
@@ -112,8 +114,8 @@ cat > index.html <<'EOF'
 </head>
 <body>
   <main>
-    <img class="preview" src="images/Sabatora0843.png" alt="Sabatora0843.png preview">
-    <a href="images/Sabatora0843.png" download="Sabatora0843.png">Download PNG</a>
+    <img class="preview" src="Sabatora0843.png" alt="Sabatora0843.png preview">
+    <a href="Sabatora0843.png" download="Sabatora0843.png">Download PNG</a>
   </main>
 </body>
 </html>
@@ -198,6 +200,12 @@ if command -v gh >/dev/null 2>&1; then
   echo
   echo "GitHub Pages:"
   echo "  https://${OWNER}.github.io/${REPO_NAME}/"
+  echo
+  echo "Image page:"
+  echo "  https://${OWNER}.github.io/${REPO_NAME}/images/"
+  echo
+  echo "Direct PNG:"
+  echo "  https://${OWNER}.github.io/${REPO_NAME}/images/Sabatora0843.png"
 else
   echo
   echo "GitHub CLI (gh) was not found."
